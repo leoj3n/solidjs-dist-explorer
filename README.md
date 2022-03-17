@@ -1,3 +1,9 @@
+# SolidJS dist explorer
+
+<img width="776" alt="image" src="https://user-images.githubusercontent.com/990216/158735483-d67d91e7-f171-496c-89d6-52bd62a1edc9.png">
+
+The goal of this project is to compare the size of SolidJS over time.
+
 ## Usage
 
 Those templates dependencies are maintained via [pnpm](https://pnpm.io) via `pnpm up -Lri`.
