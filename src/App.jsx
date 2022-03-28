@@ -8,14 +8,21 @@ function App() {
     return JSON.parse(html.split('<script>window.__DATA__ = ').pop().split('</script>')[0]);
   }
   function handleSelect(event) {
-    setVersionId(event.target.value);
+    setVersionIds(Array.from(event.target.selectedOptions).map(v => v.value));
   }
-  const [versionId, setVersionId] = createSignal();
+  const [versionIds, setVersionIds] = createSignal();
   const [availableVersions] = createResource(async () => {
     return (await fetchData('/dist/')).availableVersions;
   });
-  const [distData] = createResource(versionId, async (versionId) => {
-    return (await fetchData(`@${versionId}/dist/`)).target.details;
+  const [distData] = createResource(versionIds, async (versionIds) => {
+    let result = [];
+    for await (const data of versionIds.map(version => fetchData(`@${version}/dist/`))) {
+      result.push({
+        version: data.packageVersion,
+        files: data.target.details,
+      });
+    }
+    return result;
   });
 
   return (
@@ -25,16 +32,31 @@ function App() {
       </header>
 
       <section class={styles.main}>
-        <select onInput={handleSelect}>
+        <select onInput={handleSelect} multiple>
           <For each={availableVersions()}>
             {(item) => <option value={item}>{item}</option>}
           </For>
         </select>
         <Suspense fallback={<p>loading...</p>}>
           <Show when={distData()}>
-            <For each={Object.values(distData())}>
-              {(item) => <p>{item.path} {item.size}</p>}
-            </For>
+            <table>
+              <thead>
+                <tr>
+                  <th>Version</th>
+                  <th>Size</th>
+                </tr>
+              </thead>
+              <tbody>
+                <For each={distData()}>
+                  {(item) => 
+                    <tr>
+                      <td>{item.version}</td>
+                      <td>{item.files['/dist/solid.js'].size}</td>
+                    </tr>
+                  }
+                </For>
+              </tbody>
+            </table>
           </Show>
         </Suspense>
       </section>
